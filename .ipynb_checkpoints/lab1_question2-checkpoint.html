@@ -1,0 +1,57 @@
+<h1 id="exercise-2-creating-a-prerequisite-diagram-using-scrapy">Exercise 2: Creating a prerequisite diagram using <code>Scrapy</code></h1>
+<p>rubric={code:5,viz:2,mechanics:1}</p>
+<p>Below is a prerequisite chart for the 25 MDS courses:</p>
+<p><img src="MDS-prereq2.png" alt=""></p>
+<p>In this assignment, you will reproduce this graph, or something very similar, by scraping the prerequisite info from <a href="https://courses.students.ubc.ca/cs/main?pname=subjarea&amp;tname=subjareas&amp;req=1&amp;dept=DATA">https://courses.students.ubc.ca/cs/main?pname=subjarea&amp;tname=subjareas&amp;req=1&amp;dept=DATA</a>.</p>
+<p>In this assignment, you will implement a simple crawler, using <code>Scrapy</code>, to crawl and scrape UBC SSC web pages to grab your course schedule.</p>
+<h4 id="python-instructions">Python instructions</h4>
+<p>You can install Scrapy with <code>conda install scrapy</code> or <code>pip install scrapy</code>. Here is a <a href="http://doc.scrapy.org/en/latest/">link to scrapy documentation</a>. Additionally, you will need to install html5lib and json packages via the commands: <code>pip install html5lib</code> and <code>pip install json</code>.</p>
+<h4 id="writing-your-own-crawler">Writing your own crawler</h4>
+<p>This exercise is broken into the following steps:</p>
+<h5 id="step-1-creating-the-crawler-folder-structure">Step 1: Creating the crawler folder structure</h5>
+<p>You will use Scrapy&#39;s built in command to generate the crawler folder structure. In the command line (using interfaces such as Terminal in OS X), type <code>scrapy startproject prereq_project</code>.</p>
+<p>This will generate a directory named <code>prereq_project</code> under your current directory.</p>
+<h5 id="step-2-implementing-your-first-scraper">Step 2: Implementing your first scraper</h5>
+<p>Create a new python file, name it <code>spider.py</code> and save it under <code>prereq_project/spiders/</code> directory. You may fill in the file with the code below:</p>
+<pre><code class="language-python">import scrapy
+import html5lib
+from bs4 import BeautifulSoup
+
+class MySpider(scrapy.Spider):
+
+    name = &quot;mySpider&quot;
+    allowed_domains = [&quot;ubc.ca&quot;]
+    start_urls = [
+        &quot;https://courses.students.ubc.ca/cs/main?pname=subjarea&amp;tname=subjareas&amp;req=1&amp;dept=DATA&quot;
+    ]
+
+    def __init__(self):
+        self.log_file = open(&#39;log_file&#39;, &#39;w&#39;)
+
+    def parse(self, response):
+      soup = BeautifulSoup(response.text, &#39;html5lib&#39;)
+      return
+
+    def parse_course_details(self, response):
+        pass</code></pre>
+<p>The spider requires specification of the name, domain that it is allowed to crawl, and a list of URLs from which the spider is to begin crawling. You can run the crawler with the following command (although it will do nothing):</p>
+<p><code>scrapy crawl mySpider</code></p>
+<p>The scrapy crawler works by sending an HTTP request for each URL in the <code>start_urls</code> field. Once it receives a response, the default callback function, <code>parse(response)</code>, is invoked with a <a href="http://doc.scrapy.org/en/1.6/topics/request-response.html#scrapy.http.Response">Response</a> object passed into the function.</p>
+<p>Your task in this step is to complete the implementation of the <code>parse(response)</code> function so that you can retrieve the list of all data science courses (DATA 5XX) as well as the links to the course details. The first step of creating a BeautifulSoup object, <code>soup</code> to parse the response has been completed for you.</p>
+<p>We recommend you to use <code>self.log_file</code> to output the list of courses that you retrieved -- this will be helpful as you debug your code.</p>
+<h5 id="step-3-structuring-the-scraped-data">Step 3: Structuring the scraped data</h5>
+<p>Scrapy provides a mechanism for structuring the scraped data using <a href="http://doc.scrapy.org/en/1.6/topics/items.html">Items</a>.</p>
+<p>You will define your own Item class by subclassing Scrapy&#39;s Item class. Open <code>prereq_project/items.py</code>. The file contains a simple definition of <code>TestItem</code> class. You may rename the class to <code>CourseItem</code>.</p>
+<p>Item class comes with a default <a href="http://doc.scrapy.org/en/1.6/topics/items.html#scrapy.item.Field">Field</a> object, which is essentially a Python dictionary. We want to declare two fields: <code>course_name</code> and <code>url_link</code>.</p>
+<p>Now, modify the <code>spider.py</code>, in particular, <code>parse(response)</code> function to use <code>CourseItem</code> class and store the course name and the links in the fields that you just created. Once you are done, run the crawler via the command,</p>
+<p><code>scrapy crawl mySpider -o courses.json</code></p>
+<p>Check the <code>courses.json</code> file to ensure that your implementation is correct.</p>
+<h5 id="step-4-crawling-the-link">Step 4: Crawling the link</h5>
+<p>To retrieve the prerequisite for each of the courses, you will need to follow the links associated with each of the courses. This requires you to make an HTTP <a href="http://doc.scrapy.org/en/1.6/topics/request-response.html#request-objects">Request</a>.</p>
+<p>Your task here is to make an HTTP request on each of the links for each of the courses that you retrieved from Steps 2 and 3, and fill out the  second callback function, <code>parse_course_details(response)</code>, to retrieve the prerequisities for each of the courses.</p>
+<p>Output the retrieved course pre-requisite to the <code>courses.json</code> file. Note that you will have to change <code>items.py</code> file as you will need to store the list of prerequisite courses.</p>
+<h5 id="step-5-generate-the-graphs">Step 5. Generate the graphs</h5>
+<p>Use the <a href="https://pypi.python.org/pypi/graphviz">Python wrapper</a> around <a href="http://www.graphviz.org/">graphviz</a> to turn this into a picture. You should have graphviz  but you may need to install the Python wrapper, which can be achieved with <code>conda install graphviz</code>.</p>
+<h5 id="step-6-submit-the-code">Step 6: Submit the code</h5>
+<p>Zip the entire project and submit the code. Make sure that we can run your code by running from our command line:</p>
+<p><code>scrapy crawl mySpider -o courses.json</code></p>
